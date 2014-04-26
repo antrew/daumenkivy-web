@@ -1,3 +1,4 @@
+# Laravel files
 /bootstrap/compiled.php
 /vendor
 composer.phar
@@ -6,3 +7,8 @@ composer.lock
 .env.php
 .DS_Store
 Thumbs.db
+
+# Eclipse project files
+/.project
+/.buildpath
+/.settings/
