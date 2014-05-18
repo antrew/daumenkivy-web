@@ -7,7 +7,7 @@ class ImageController extends BaseController {
 	}
 	
 	private static function getFilename($id) {
-		$path = self::getImagesDirectory() . "/" . $id . ".gif";
+		return self::getImagesDirectory() . "/" . $id . ".gif";
 	}
 	
 	public function getImage($filename) {
@@ -39,8 +39,47 @@ class ImageController extends BaseController {
 	}
 
 	public static function storeImage($id, $uploadedFile) {
-		$filename = self::getFilename($id);
 		$uploadedFile->move(self::getImagesDirectory(), $id . ".gif");
 	}
 
+	public static function storeImage2($id, $path) {
+		$filename = self::getFilename($id);
+		rename($path, $filename);
+	}
+	
+	public static function zipToGif($uploadedFile) {
+		$tmpDir = self::createTempDir('daumenkivy_zip_upload');
+		
+		// extract ZIP archive
+		$zip = new ZipArchive;
+		$zip->open($uploadedFile->getPathname());
+		Log::debug($tmpDir);
+		$zip->extractTo($tmpDir);
+		$zip->close();
+
+		// create animated GIF
+		$animatedPath = tempnam(sys_get_temp_dir(), "daumenkivy_animated_gif");
+		Log::debug($animatedPath);
+		// -delay - in 1/100 seconds
+		// -loop - 0=infinite
+		$command = escapeshellcmd("convert -delay 50 -loop 0 $tmpDir/*.png gif:$animatedPath");
+		Log::debug($command);
+		$execResult = passthru($command, $returnVar);
+		Log::debug($execResult);
+		Log::debug($returnVar);
+		if ($returnVar > 0) {
+			// TODO handle error
+		}
+		// delete temporary directory
+		exec("rm -rf $tmpDir"); // when running on Linux
+		exec("rmdir /s /q $tmpDir"); // when running on Windows
+		return $animatedPath;
+	}
+
+	private static function createTempDir($prefix) {
+		$tempfile=tempnam(sys_get_temp_dir(), $prefix);
+		if (file_exists($tempfile)) { unlink($tempfile); }
+		mkdir($tempfile);
+		if (is_dir($tempfile)) { return $tempfile; }
+	}
 }

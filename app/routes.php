@@ -38,6 +38,27 @@ Route::post ( '/submit', function () {
 	return View::make ( 'submit_success' );
 } );
 
+Route::post ( '/submitZip', function () {
+	$dk = new Daumenkivy();
+	
+	$dk->caption = Input::get('caption');
+	$dk->username = Input::get('username');
+	$dk->email = Input::get('email');
+	
+	$file = Input::file('file');
+	
+	$animatedFile = ImageController::zipToGif($file);
+	
+	// TODO check if parameters are provided
+	// insert into database
+	$dk->save();
+	
+	// move file to storage
+	ImageController::storeImage2($dk->id, $animatedFile);
+	
+	return Response::json($dk);
+});
+
 Route::get(
 	'/images/{file}',
 	'ImageController@getImage'
