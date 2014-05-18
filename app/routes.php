@@ -11,8 +11,7 @@
 |
 */
 Route::get ( '/', function () {
-	// TODO sort ID descending
-	$daumenkivys = Daumenkivy::all ();
+	$daumenkivys = Daumenkivy::orderBy('id', 'DESC')->get();
 	
 	return View::make ( 'feed' )->with ( 'daumenkivys', $daumenkivys );
 } );
@@ -28,12 +27,18 @@ Route::post ( '/submit', function () {
 	$dk->username = Input::get('username');
 	$dk->email = Input::get('email');
 
-	// TODO move file to storage
-	$file = Input::file('file');
-
 	// TODO check if parameters are provided
 	// insert into database
 	$dk->save();
 
+	// move file to storage
+	$file = Input::file('file');
+	ImageController::storeImage($dk->id, $file);
+	
 	return View::make ( 'submit_success' );
 } );
+
+Route::get(
+	'/images/{file}',
+	'ImageController@getImage'
+);
